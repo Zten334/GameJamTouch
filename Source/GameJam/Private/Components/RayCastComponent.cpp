@@ -10,7 +10,7 @@ URayCastComponent::URayCastComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 
 	// 创建可视化箭头，编辑器里能看到射线方向和长度
-	ArrowComponent = CreateEditorOnlyDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
+	ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
 	ArrowComponent->ArrowColor = FColor::Cyan;
 	ArrowComponent->ArrowSize = 0.5f;
 	ArrowComponent->bIsScreenSizeScaled = true;
@@ -60,7 +60,11 @@ FString URayCastComponent::PerformTrace()
 
 	const FVector Start = GetComponentLocation();
 	const FVector End = Start + GetForwardVector() * TraceLength;
+	
+	UE_LOG(LogTemp, Warning, TEXT("%s"),*Start.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("%s"),*End.ToString());
 
+	
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner());
 	QueryParams.bTraceComplex = false;
@@ -76,7 +80,7 @@ FString URayCastComponent::PerformTrace()
 
 	if (bDrawDebug)
 	{
-		DrawDebugLine(GetWorld(), Start, End, DebugColor, false, 0.1f, 0, 1.0f);
+		DrawDebugLine(GetWorld(), Start, End, DebugColor, false, 5.f, 0, 5.0f);
 
 		if (bHit)
 		{

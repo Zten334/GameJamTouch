@@ -48,6 +48,7 @@ ACharacterBase::ACharacterBase()
 	
 	//创建射线检测组件
 	RayCastComponent = CreateDefaultSubobject<URayCastComponent>("RayCastComponent");
+	RayCastComponent -> SetupAttachment(GetRootComponent());
 }
 
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
