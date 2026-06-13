@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS(Blueprintable)
+UCLASS()
 class GAMEJAM_API UInputDataAsset : public UDataAsset
 {
 	GENERATED_BODY()
@@ -23,4 +23,7 @@ public :
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
 	TObjectPtr<UInputAction> RotateAction;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> RaycastAction;
 };

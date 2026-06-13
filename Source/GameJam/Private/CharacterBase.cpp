@@ -10,6 +10,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameJam/Public/Components/RayCastComponent.h"
 #include "GameJam/Public/DataAsset/InputDataAsset.h"
 
 // Sets default values
@@ -44,6 +45,9 @@ ACharacterBase::ACharacterBase()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>("FollowCamera");
 	FollowCamera->SetupAttachment(CameraBoom,USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;	
+	
+	//创建射线检测组件
+	RayCastComponent = CreateDefaultSubobject<URayCastComponent>("RayCastComponent");
 }
 
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -80,14 +84,24 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	{
 		EnhancedInput->BindAction(InputData->RotateAction, ETriggerEvent::Triggered,this, &ACharacterBase::DoLook);
 	}	
+	
+	if (InputData->RaycastAction)
+	{
+		EnhancedInput->BindAction(InputData->RaycastAction, ETriggerEvent::Triggered,this, &ACharacterBase::DoRaycast);
+	}	
 }
 
 void ACharacterBase::DoMove(const FInputActionValue& InputActionValue)
 {
 	const FVector2D Movement = InputActionValue.Get<FVector2D>();
-	const FRotator MovementRotation(0.f,Controller->GetControlRotation().Yaw,0.f);
-	
-	
+
+	if (!Controller || Movement.IsNearlyZero())
+	{
+		return;
+	}
+
+	const FRotator MovementRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
+
 	if (Movement.Y != 0.f)
 	{
 		const FVector ForwardDirection = MovementRotation.RotateVector(FVector::ForwardVector);
@@ -97,16 +111,22 @@ void ACharacterBase::DoMove(const FInputActionValue& InputActionValue)
 	{
 		const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
 		AddMovementInput(RightDirection, Movement.X);
-	}	
+	}
 }
 
 void ACharacterBase::DoLook(const FInputActionValue& InputActionValue)
 {
 	const float InputValue = InputActionValue.Get<float>();
-	if (InputValue != 0.f)
+	if (!Controller || InputValue == 0.f)
 	{
-		AddControllerYawInput(InputValue);
+		return;
 	}
+	AddControllerYawInput(InputValue * RotateSpeed * GetWorld()->GetDeltaSeconds() );
+}
+
+void ACharacterBase::DoRaycast()
+{
+	RayCastComponent->PerformTrace();
 }
 
 
