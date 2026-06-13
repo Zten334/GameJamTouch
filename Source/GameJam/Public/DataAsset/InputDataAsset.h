@@ -1,0 +1,27 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Engine/DataAsset.h"
+#include "InputDataAsset.generated.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
+
+/**
+ * 
+ */
+UCLASS()
+class GAMEJAM_API UInputDataAsset : public UDataAsset
+{
+	GENERATED_BODY()
+public :
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Input")
+	TObjectPtr<UInputMappingContext> InputMappingContext;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> MoveAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Input|Actions")
+	TObjectPtr<UInputAction> RotateAction;
+};

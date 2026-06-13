@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "CharacterBase.generated.h"
 
+struct FInputActionValue;
+class UInputDataAsset;
+
 UCLASS()
 class GAMEJAM_API ACharacterBase : public ACharacter
 {
@@ -13,5 +16,25 @@ class GAMEJAM_API ACharacterBase : public ACharacter
 
 public:
 	ACharacterBase();
+
+protected:
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+private:
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USpringArmComponent> CameraBoom;
+	
+	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCameraComponent> FollowCamera;
+protected:
+	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Input")
+	TObjectPtr<UInputDataAsset> InputData;
+
+#pragma region InputResponse
+	void DoMove(const FInputActionValue& InputActionValue);
+	void DoLook(const FInputActionValue& InputActionValue);
+	
+#pragma endregion
+	
 
 };
