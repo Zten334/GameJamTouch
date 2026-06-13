@@ -8,6 +8,8 @@
 
 struct FInputActionValue;
 class UInputDataAsset;
+class USpringArmComponent;
+class UCameraComponent;
 
 UCLASS()
 class GAMEJAM_API ACharacterBase : public ACharacter

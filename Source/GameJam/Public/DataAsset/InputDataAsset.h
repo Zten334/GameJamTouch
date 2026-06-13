@@ -10,7 +10,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(Blueprintable)
 class GAMEJAM_API UInputDataAsset : public UDataAsset
 {
 	GENERATED_BODY()
