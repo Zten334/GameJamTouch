@@ -14,7 +14,7 @@ public:
 	float CurrentTime = 0.f;
 	float Health = 100.f;
 	bool Has_Key = false;
-	bool Has_Wedget = false;
+	bool Has_Wallet = false;
 	bool White_Cane = false;
 	
 	

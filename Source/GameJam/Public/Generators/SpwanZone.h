@@ -17,30 +17,29 @@ public:
 	ASpwanZone();
 
 protected:
-	virtual void BeginPlay() override;
-
-	// ── 触发器 ──
+	// ── 触发器：玩家踩入范围 ──
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn|Components")
 	TObjectPtr<UBoxComponent> TriggerComp;
+
+	// ── 标记点容器：在蓝图里往它下面加 Arrow/SceneComponent 即可 ──
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn|Components")
+	TObjectPtr<USceneComponent> MarkersRoot;
+
+	/** BeginPlay 时自动收集的标记点（只读） */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn")
+	TArray<TObjectPtr<USceneComponent>> CachedMarkers;
+
+	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	void OnZoneBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	// ── 生成 ──
 	void SpawnItems();
 
 	/** 生成什么 Actor */
 	UPROPERTY(EditDefaultsOnly, Category = "Spawn")
 	TSubclassOf<AActor> ItemClass;
-
-	/** 标记点：位置 = 生成点, 朝向 = 物体前方（ProjectileMovement 发方向） */
-	UPROPERTY(VisibleAnywhere, Category = "Spawn")
-	TArray<TObjectPtr<USceneComponent>> SpawnMarkers;
-
-	/** 标记点数量（构造里批量创建） */
-	UPROPERTY(EditDefaultsOnly, Category = "Spawn")
-	int32 MarkerCount = 3;
 
 	/** 是否只生成一次 */
 	UPROPERTY(EditDefaultsOnly, Category = "Spawn")

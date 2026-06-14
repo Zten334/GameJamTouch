@@ -8,18 +8,30 @@
 
 class ACharacterBase;
 class UStaticMeshComponent;
-class UProjectileMovementComponent;
 class UCameraShakeBase;
+class USoundBase;
+class UProjectileMovementComponent;
 
 UENUM(BlueprintType)
 enum class ECollisionType : uint8
 {
+	NONE,            //什么也不是的类型，不会触发CollitionType
 	BANANA,          // 香蕉
 	BECYLE,          // 自行车
 	UTILITY_POLE,    // 电线杆
 	PUDDLE,          // 水坑
 	RUNNING_MAN,     // MAN！
 	VEHICLE,         // 载具
+};
+
+UENUM(BlueprintType)
+enum class EPlayerTouchType : uint8
+{
+	NORMAL,                // 一般物体
+	KEY,                   // 钥匙
+	WALLET,               // 钱包
+	WHITE_CANE,           // 盲杖
+
 };
 
 UCLASS()
@@ -41,6 +53,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IteracteType")
 	ECollisionType CollisionType;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TouchType")
+	EPlayerTouchType TouchType;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	TObjectPtr<USoundBase> CollisionSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
+	TObjectPtr<USoundBase> TouchSound;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
 	TSubclassOf<UCameraShakeBase> HitShakeClass;
 
@@ -48,11 +69,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> BlockComp;
 
-	// ── 移动组件：Item 自己控制运动 ──
+	// ── 移动：Item 自己控制飞行 ──
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UProjectileMovementComponent> MovementComp;
 
-	/** 初始移动速度，BeginPlay 时自动按自身前方发射 */
+	/** 初始移动速度，BeginPlay 时按自身前方推一下 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
-	float InitialSpeed = 500.f;
+	float InitialSpeed = 0.f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float CollisionDemage = 0.f;
 };

@@ -11,7 +11,7 @@ ASpwanZone::ASpwanZone()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
-	// ── 触发器：玩家踩入范围 ──
+	// ── 触发器 ──
 	TriggerComp = CreateDefaultSubobject<UBoxComponent>(TEXT("TriggerComp"));
 	SetRootComponent(TriggerComp);
 	TriggerComp->SetBoxExtent(FVector(300.f, 300.f, 150.f));
@@ -20,25 +20,23 @@ ASpwanZone::ASpwanZone()
 	TriggerComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	TriggerComp->OnComponentBeginOverlap.AddDynamic(this, &ASpwanZone::OnZoneBeginOverlap);
 
+	// ── 标记点容器：蓝图里手动往它下面加 Arrow Component ──
+	MarkersRoot = CreateDefaultSubobject<USceneComponent>(TEXT("MarkersRoot"));
+	MarkersRoot->SetupAttachment(TriggerComp);
+
 #if WITH_EDITOR
 	TriggerComp->ShapeColor = FColor::Green;
 #endif
-
-	// ── 创建标记点（编辑器里可拖拽箭头）──
-	for (int32 i = 0; i < MarkerCount; ++i)
-	{
-		USceneComponent* Marker = CreateDefaultSubobject<USceneComponent>(
-			*FString::Printf(TEXT("SpawnMarker_%d"), i));
-		Marker->SetupAttachment(TriggerComp);
-		Marker->SetRelativeLocation(FVector(i * 200.f, 0.f, 100.f));
-		Marker->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
-		SpawnMarkers.Add(Marker);
-	}
 }
 
 void ASpwanZone::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// 收集 MarkersRoot 下所有子组件，缓存起来（先用原始指针接收，再转存）
+	TArray<USceneComponent*> RawMarkers;
+	MarkersRoot->GetChildrenComponents(false, RawMarkers);
+	CachedMarkers = TArray<TObjectPtr<USceneComponent>>(RawMarkers);
 }
 
 void ASpwanZone::OnZoneBeginOverlap(UPrimitiveComponent*, AActor* OtherActor,
@@ -57,7 +55,7 @@ void ASpwanZone::SpawnItems()
 {
 	if (!ItemClass || !GetWorld()) return;
 
-	for (USceneComponent* Marker : SpawnMarkers)
+	for (USceneComponent* Marker : CachedMarkers)
 	{
 		if (!Marker) continue;
 
@@ -70,7 +68,6 @@ void ASpwanZone::SpawnItems()
 		AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(
 			ItemClass, SpawnLocation, SpawnRotation, Params);
 
-		// Item 的 BeginPlay 里自己的 MovementComp 按 InitialSpeed 发射，
-		// 方向 = 生成时的朝向（Marker 的 ForwardVector）
+		// Item 的 BeginPlay 按自己 InitialSpeed + 当前朝向发射
 	}
 }
