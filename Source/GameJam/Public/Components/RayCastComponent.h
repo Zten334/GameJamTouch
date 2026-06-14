@@ -6,6 +6,9 @@
 #include "Components/SceneComponent.h"
 #include "RayCastComponent.generated.h"
 
+// 命中结果广播委托
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRayCastHit, const FHitResult&, HitResult);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class GAMEJAM_API URayCastComponent : public USceneComponent
 {
@@ -17,6 +20,10 @@ public:
 	// 执行射线检测，返回命中 Actor 的名字。未命中返回空字符串。
 	UFUNCTION(BlueprintCallable, Category = "RayCast")
 	FString PerformTrace();
+
+	// 命中时广播，外部组件（如 BlindEchoRevealComponent）订阅即可解耦
+	UPROPERTY(BlueprintAssignable, Category = "RayCast")
+	FOnRayCastHit OnRayCastHit;
 
 protected:
 	virtual void BeginPlay() override;

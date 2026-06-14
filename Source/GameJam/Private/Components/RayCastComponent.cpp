@@ -88,5 +88,11 @@ FString URayCastComponent::PerformTrace()
 		}
 	}
 
+	// 命中时广播完整 HitResult（含命中点 Hit.ImpactPoint / Hit.Component 等）
+	if (bHit)
+	{
+		OnRayCastHit.Broadcast(Hit);
+	}
+
 	return bHit ? Hit.GetActor()->GetName() : TEXT("");
 }

@@ -11,6 +11,7 @@ struct FInputActionValue;
 class UInputDataAsset;
 class USpringArmComponent;
 class UCameraComponent;
+class UBlindEchoRevealComponent;
 
 UCLASS()
 class GAMEJAM_API ACharacterBase : public ACharacter
@@ -21,6 +22,7 @@ public:
 	ACharacterBase();
 
 protected:
+	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 private:
@@ -32,6 +34,9 @@ private:
 	
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "Raycast", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URayCastComponent> RayCastComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "BlindEcho", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBlindEchoRevealComponent> BlindEchoRevealComponent;
 	
 	
 protected:
@@ -42,6 +47,8 @@ protected:
 	void DoMove(const FInputActionValue& InputActionValue);
 	void DoLook(const FInputActionValue& InputActionValue);
 	void DoRaycast();
+	UFUNCTION()
+	void HandleRayCastHit(const FHitResult& HitResult);
 	
 #pragma endregion
 	

@@ -2,6 +2,7 @@
 
 
 #include "GameJam/Public/CharacterBase.h"
+#include "GameJam/Public/BlindEchoRevealComponent.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -49,6 +50,19 @@ ACharacterBase::ACharacterBase()
 	//创建射线检测组件
 	RayCastComponent = CreateDefaultSubobject<URayCastComponent>("RayCastComponent");
 	RayCastComponent -> SetupAttachment(GetRootComponent());
+
+	//创建盲杖回响显隐组件
+	BlindEchoRevealComponent = CreateDefaultSubobject<UBlindEchoRevealComponent>("BlindEchoRevealComponent");
+}
+
+void ACharacterBase::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (RayCastComponent)
+	{
+		RayCastComponent->OnRayCastHit.AddDynamic(this, &ACharacterBase::HandleRayCastHit);
+	}
 }
 
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -88,7 +102,7 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	
 	if (InputData->RaycastAction)
 	{
-		EnhancedInput->BindAction(InputData->RaycastAction, ETriggerEvent::Triggered,this, &ACharacterBase::DoRaycast);
+		EnhancedInput->BindAction(InputData->RaycastAction, ETriggerEvent::Started,this, &ACharacterBase::DoRaycast);
 	}	
 }
 
@@ -130,6 +144,12 @@ void ACharacterBase::DoRaycast()
 	RayCastComponent->PerformTrace();
 }
 
-
+void ACharacterBase::HandleRayCastHit(const FHitResult& HitResult)
+{
+	if (BlindEchoRevealComponent)
+	{
+		BlindEchoRevealComponent->RevealFromHit(HitResult);
+	}
+}
 
 
