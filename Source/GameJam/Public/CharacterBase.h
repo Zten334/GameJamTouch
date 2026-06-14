@@ -7,10 +7,12 @@
 #include "CharacterBase.generated.h"
 
 class URayCastComponent;
+class UPlayerUIComponent;
 struct FInputActionValue;
 class UInputDataAsset;
 class USpringArmComponent;
 class UCameraComponent;
+class UUserWidget;
 
 UCLASS()
 class GAMEJAM_API ACharacterBase : public ACharacter
@@ -19,7 +21,9 @@ class GAMEJAM_API ACharacterBase : public ACharacter
 
 public:
 	ACharacterBase();
-
+	//暴露给接触到的物品使用
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UPlayerUIComponent> PlayerUIComponent;
 
 protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
@@ -36,9 +40,15 @@ private:
 	TObjectPtr<URayCastComponent> RayCastComponent;
 
 
+
+
 protected:
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="Input")
 	TObjectPtr<UInputDataAsset> InputData;
+
+	/** HUD Widget 类，蓝图里选 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UUserWidget> HUDWidgetClass;
 
 #pragma region InputResponse
 	void DoMove(const FInputActionValue& InputActionValue);

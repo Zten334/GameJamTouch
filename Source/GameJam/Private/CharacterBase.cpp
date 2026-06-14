@@ -12,6 +12,9 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameJam/Public/Components/RayCastComponent.h"
 #include "GameJam/Public/DataAsset/InputDataAsset.h"
+#include "Components/PlayerUIComponent.h"
+#include "Blueprint/UserWidget.h"
+#include "UI/HUDWidgetBase.h"
 #include "Actors/IteractableItem.h"
 
 // Sets default values
@@ -50,6 +53,9 @@ ACharacterBase::ACharacterBase()
 	//创建射线检测组件
 	RayCastComponent = CreateDefaultSubobject<URayCastComponent>("RayCastComponent");
 	RayCastComponent -> SetupAttachment(GetRootComponent());
+
+	//创建 UI 组件
+	PlayerUIComponent = CreateDefaultSubobject<UPlayerUIComponent>("PlayerUIComponent");
 }
 
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -103,8 +109,20 @@ void ACharacterBase::BeginPlay()
 	Super::BeginPlay();
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) return;
-	//开始时开放鼠标光标
+
+	// 开放鼠标光标
 	PC->SetShowMouseCursor(true);
+
+	// 创建 HUD，如果是 UHUDWidgetBase 子类则传入组件引用
+	if (IsLocallyControlled() && HUDWidgetClass)
+	{
+		UUserWidget* HUD = CreateWidget<UUserWidget>(PC, HUDWidgetClass);
+		if (UHUDWidgetBase* BaseHUD = Cast<UHUDWidgetBase>(HUD))
+		{
+			BaseHUD->Init(PlayerUIComponent);
+		}
+		HUD->AddToViewport();
+	}
 }
 
 void ACharacterBase::DoMove(const FInputActionValue& InputActionValue)

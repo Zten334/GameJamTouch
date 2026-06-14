@@ -7,8 +7,12 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Camera/CameraShakeBase.h"
+#include "Components/PlayerUIComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
+#include "GameFramework/PlayerController.h"
+#include "State/State.h"
 
 ATrafficZone::ATrafficZone()
 {
@@ -25,7 +29,7 @@ void ATrafficZone::BeginPlay()
 	// 绑定玩家离开区域
 	TriggerComp->OnComponentEndOverlap.AddDynamic(this, &ATrafficZone::OnTriggerEndOverlap);
 
-	// 开局就生成车辆（不受 bSpawnOnce 限制）
+	// 开局就生成车辆
 	SpawnItems();
 	bHasSpawned = true;
 
@@ -33,14 +37,20 @@ void ATrafficZone::BeginPlay()
 	SwitchToGreen();
 }
 
-// ── 覆盖：不靠玩家踩入触发生成，只记录进出 ──
+// ── 玩家进入：绿灯只记录，红灯直接弹走 ──
 void ATrafficZone::OnZoneBeginOverlap(UPrimitiveComponent*, AActor* OtherActor,
 	UPrimitiveComponent*, int32, bool, const FHitResult&)
 {
-	if (Cast<ACharacterBase>(OtherActor))
+	ACharacterBase* Player = Cast<ACharacterBase>(OtherActor);
+	if (!Player) return;
+
+	if (CurrentLight == ETrafficLight::Red)
 	{
-		bPlayerInZone = true;
+		PunishAndTeleport(Player);
+		return;
 	}
+
+	bPlayerInZone = true;
 }
 
 void ATrafficZone::OnTriggerEndOverlap(UPrimitiveComponent*, AActor* OtherActor,
@@ -52,7 +62,39 @@ void ATrafficZone::OnTriggerEndOverlap(UPrimitiveComponent*, AActor* OtherActor,
 	}
 }
 
-// ── 生成 + 绑车辆撞人事件 ──
+// ── 红灯踩入：音效 + 晃镜 + 传送 ──
+void ATrafficZone::PunishAndTeleport(ACharacterBase* Player)
+{
+	if (!Player || !RestartPoint) return;
+
+	if (PunishSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), PunishSound, Player->GetActorLocation());
+	}
+
+	if (PunishShakeClass)
+	{
+		if (APlayerController* PC = Cast<APlayerController>(Player->GetController()))
+		{
+			PC->ClientStartCameraShake(PunishShakeClass);
+		}
+	}
+	//出现提示
+	if (Player->PlayerUIComponent)
+	{
+		Player->PlayerUIComponent->ShowMessage(FText::FromString(TEXT("不要闯红灯！")),2.f);
+	}
+	//扣血
+	AState* State = Cast<AState>(Player->GetPlayerState());
+	if (State)
+	{
+		State->Health -= Damage;
+	}
+	
+	Player->SetActorLocation(RestartPoint->GetComponentLocation());
+}
+
+// ── 生成车辆，不做额外绑定 ──
 void ATrafficZone::SpawnItems()
 {
 	if (!ItemClass || !GetWorld()) return;
@@ -72,33 +114,27 @@ void ATrafficZone::SpawnItems()
 
 		SpawnedActors.Add(SpawnedActor);
 		VehicleOrigins.Add(SpawnedActor, SpawnLocation);
-
-		// 绑定 Item 的碰撞委托，TrafficZone 监听撞人事件
-		if (AIteractableItem* Item = Cast<AIteractableItem>(SpawnedActor))
-		{
-			Item->OnPlayerCollision.AddDynamic(this, &ATrafficZone::OnVehicleHitPlayer);
-		}
 	}
-}
-
-// ── 车辆撞到玩家 → 传送 ──
-void ATrafficZone::OnVehicleHitPlayer(AActor* HitPlayer)
-{
-	ACharacterBase* Player = Cast<ACharacterBase>(HitPlayer);
-	if (!Player || !RestartPoint) return;
-
-	Player->SetActorLocation(RestartPoint->GetComponentLocation());
 }
 
 // ── 红绿灯切换 ──
 void ATrafficZone::SwitchToGreen()
 {
 	CurrentLight = ETrafficLight::Green;
-	LaunchVehicles();
+
+	// 停掉红灯轮询
+	GetWorldTimerManager().ClearTimer(RedCheckTimer);
+
+	// 绿灯 = 安全，车子停
+	RecallVehicles();
+
+	if (GreenLightSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), GreenLightSound, GetActorLocation());
+	}
 
 	GetWorldTimerManager().SetTimer(CycleTimer, this, &ATrafficZone::SwitchToRed, GreenDuration, false);
 
-	// 绿灯快结束时检查
 	float WarnTime = GreenDuration - WarningAhead;
 	if (WarnTime > 0.f)
 	{
@@ -109,9 +145,47 @@ void ATrafficZone::SwitchToGreen()
 void ATrafficZone::SwitchToRed()
 {
 	CurrentLight = ETrafficLight::Red;
-	RecallVehicles();
+
+	// 红灯 = 危险，车子出动
+	LaunchVehicles();
+
+	if (RedLightSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), RedLightSound, GetActorLocation());
+	}
+
+	// 先清理一次当前在区域内的玩家
+	if (bPlayerInZone)
+	{
+		if (ACharacterBase* Player = Cast<ACharacterBase>(
+			GetWorld()->GetFirstPlayerController()->GetPawn()))
+		{
+			PunishAndTeleport(Player);
+		}
+		bPlayerInZone = false;
+	}
+
+	// 启动红灯轮询：每 0.2s 检查有没有玩家踩进来
+	GetWorldTimerManager().SetTimer(RedCheckTimer, this,
+		&ATrafficZone::RedTickCheck, 0.2f, true);
 
 	GetWorldTimerManager().SetTimer(CycleTimer, this, &ATrafficZone::SwitchToGreen, RedDuration, false);
+}
+
+void ATrafficZone::RedTickCheck()
+{
+	if (CurrentLight != ETrafficLight::Red) return;
+
+	TArray<AActor*> Overlapping;
+	TriggerComp->GetOverlappingActors(Overlapping, ACharacterBase::StaticClass());
+
+	for (AActor* Actor : Overlapping)
+	{
+		if (ACharacterBase* Player = Cast<ACharacterBase>(Actor))
+		{
+			PunishAndTeleport(Player);
+		}
+	}
 }
 
 void ATrafficZone::OnWarningCheck()
@@ -152,14 +226,12 @@ void ATrafficZone::RecallVehicles()
 		const FVector& Origin = Pair.Value;
 		if (!Vehicle) continue;
 
-		// 停止移动
 		if (AIteractableItem* Item = Cast<AIteractableItem>(Vehicle))
 		{
 			Item->MovementComp->Velocity = FVector::ZeroVector;
 			Item->MovementComp->Deactivate();
 		}
 
-		// 传送回原点
 		Vehicle->SetActorLocation(Origin);
 	}
 }

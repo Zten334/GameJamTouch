@@ -18,6 +18,7 @@ ASpwanZone::ASpwanZone()
 	TriggerComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	TriggerComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	TriggerComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	TriggerComp->SetGenerateOverlapEvents(true);
 	TriggerComp->OnComponentBeginOverlap.AddDynamic(this, &ASpwanZone::OnZoneBeginOverlap);
 
 	// ── 标记点容器：蓝图里手动往它下面加 Arrow Component ──

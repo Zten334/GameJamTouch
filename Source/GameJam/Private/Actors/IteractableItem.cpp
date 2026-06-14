@@ -4,6 +4,7 @@
 
 #include "CharacterBase.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/PlayerUIComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Camera/CameraShakeBase.h"
 #include "Kismet/GameplayStatics.h"
@@ -22,14 +23,14 @@ AIteractableItem::AIteractableItem()
 	BlockComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	BlockComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 
-	// ── 移动：Item 自己控制飞行，跟 Mesh 碰撞复杂度无关 ──
+	// ── 移动：Item 自己控制飞行 ──
 	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("MovementComp"));
 	MovementComp->bAutoActivate = false;
 	MovementComp->InitialSpeed = 0.f;
 	MovementComp->MaxSpeed = 3000.f;
 	MovementComp->bRotationFollowsVelocity = true;
 	MovementComp->bShouldBounce = false;
-	MovementComp->ProjectileGravityScale = 0.f;  // 零重力，水平直飞
+	MovementComp->ProjectileGravityScale = 0.f;
 
 	CollisionType = ECollisionType::NONE;
 }
@@ -62,40 +63,48 @@ void AIteractableItem::HandleCollisionInteraction(AActor* Interactor)
 	{
 		return;
 	}
+
+	FText CollisionMsg;
+
 	switch (CollisionType)
 	{
 	case ECollisionType::BANANA:
 		PlayerState->Health -= CollisionDemage;
-		UE_LOG(LogTemp, Warning, TEXT("踩到香蕉皮！滑倒！，扣除生命值，剩余生命值是%f"),PlayerState->Health);
+		CollisionMsg = FText::FromString(TEXT("踩到香蕉皮！滑倒！"));
 		break;
 
 	case ECollisionType::BECYLE:
 		PlayerState->Health -= CollisionDemage;
-		UE_LOG(LogTemp, Warning, TEXT("撞到自行车！"));
+		CollisionMsg = FText::FromString(TEXT("撞到自行车！"));
 		break;
 
 	case ECollisionType::UTILITY_POLE:
 		PlayerState->Health -= CollisionDemage;
-		UE_LOG(LogTemp, Warning, TEXT("撞到电线杆！"));
+		CollisionMsg = FText::FromString(TEXT("撞到电线杆！"));
 		break;
 
 	case ECollisionType::PUDDLE:
 		PlayerState->Health -= CollisionDemage;
-		UE_LOG(LogTemp, Warning, TEXT("踩到水坑！溅起水花！"));
+		CollisionMsg = FText::FromString(TEXT("踩到水坑！溅起水花！"));
 		break;
 
 	case ECollisionType::RUNNING_MAN:
 		PlayerState->Health -= CollisionDemage;
-		UE_LOG(LogTemp, Warning, TEXT("WHAT CAN I SAY？MAN！"));
+		CollisionMsg = FText::FromString(TEXT("WHAT CAN I SAY？MAN！"));
 		break;
 
 	case ECollisionType::VEHICLE:
 		PlayerState->Health -= CollisionDemage;
-		UE_LOG(LogTemp, Warning, TEXT("被车撞了！"));
+		CollisionMsg = FText::FromString(TEXT("被车撞了！"));
 		break;
 
 	default:
 		break;
+	}
+
+	if (Player->PlayerUIComponent)
+	{
+		Player->PlayerUIComponent->ShowMessage(CollisionMsg, 2.f);
 	}
 
 	if (CollisionSound)
@@ -116,7 +125,6 @@ void AIteractableItem::HandleCollisionInteraction(AActor* Interactor)
 
 void AIteractableItem::HandleTouch(ACharacterBase* Character)
 {
-	UE_LOG(LogTemp, Warning, TEXT("已被选中！"));
 	if (!Character)
 	{
 		return;
@@ -132,26 +140,34 @@ void AIteractableItem::HandleTouch(ACharacterBase* Character)
 	{
 		return;
 	}
+
+	FText TouchMsg;
+
 	switch (TouchType)
 	{
 	case EPlayerTouchType::KEY:
 		PlayerState->Has_Key = PlayerState->Has_Key ? PlayerState->Has_Key : true;
-		UE_LOG(LogTemp, Warning, TEXT("获得钥匙！"));
+		TouchMsg = FText::FromString(TEXT("获得钥匙！"));
 		break;
 
 	case EPlayerTouchType::WALLET:
 		PlayerState->Has_Wallet = PlayerState->Has_Wallet ? PlayerState->Has_Wallet : true;
-		UE_LOG(LogTemp, Warning, TEXT("获得钱包！"));
+		TouchMsg = FText::FromString(TEXT("获得钱包！"));
 		break;
 
 	case EPlayerTouchType::WHITE_CANE:
 		PlayerState->White_Cane = PlayerState->White_Cane ? PlayerState->White_Cane : true;
-		UE_LOG(LogTemp, Warning, TEXT("获得盲杖！"));
+		TouchMsg = FText::FromString(TEXT("获得盲杖！"));
 		break;
 
 	case EPlayerTouchType::NORMAL:
 	default:
-		UE_LOG(LogTemp, Warning, TEXT("该物品无特殊效果"));
+		TouchMsg = FText::FromString(TEXT("该物品无特殊效果"));
 		break;
+	}
+
+	if (Character->PlayerUIComponent)
+	{
+		Character->PlayerUIComponent->ShowMessage(TouchMsg, 2.f);
 	}
 }
