@@ -88,8 +88,22 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	
 	if (InputData->RaycastAction)
 	{
-		EnhancedInput->BindAction(InputData->RaycastAction, ETriggerEvent::Triggered,this, &ACharacterBase::DoRaycast);
-	}	
+		EnhancedInput->BindAction(InputData->RaycastAction, ETriggerEvent::Triggered, this, &ACharacterBase::DoRaycast);
+	}
+
+	if (InputData->MouseClickAction)
+	{
+		EnhancedInput->BindAction(InputData->MouseClickAction, ETriggerEvent::Started, this, &ACharacterBase::DoMouseClick);
+	}
+}
+
+void ACharacterBase::BeginPlay()
+{
+	Super::BeginPlay();
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+	//开始时开放鼠标光标
+	PC->SetShowMouseCursor(true);
 }
 
 void ACharacterBase::DoMove(const FInputActionValue& InputActionValue)
@@ -127,7 +141,27 @@ void ACharacterBase::DoLook(const FInputActionValue& InputActionValue)
 
 void ACharacterBase::DoRaycast()
 {
-	RayCastComponent->PerformTrace();
+	// 沿组件前方发射
+	RayCastComponent->PerformTrace(
+		RayCastComponent->GetComponentLocation(),
+		RayCastComponent->GetForwardVector()
+	);
+}
+
+void ACharacterBase::DoMouseClick()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	// 获取鼠标屏幕坐标
+	float MouseX, MouseY;
+	if (!PC->GetMousePosition(MouseX, MouseY)) return;
+
+	// 屏幕坐标 → 世界方向
+	FVector WorldLocation, WorldDirection;
+	if (!PC->DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection)) return;
+
+	RayCastComponent->PerformTrace(WorldLocation, WorldDirection);
 }
 
 

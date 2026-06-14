@@ -22,6 +22,7 @@ public:
 
 protected:
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void BeginPlay() override;
 
 private:
 	UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category = "SpringArm", meta = (AllowPrivateAccess = "true"))
@@ -42,7 +43,8 @@ protected:
 	void DoMove(const FInputActionValue& InputActionValue);
 	void DoLook(const FInputActionValue& InputActionValue);
 	void DoRaycast();
-	
+	void DoMouseClick();
+
 #pragma endregion
 	
 	UPROPERTY(EditDefaultsOnly,BlueprintReadOnly,Category="LookPara|TurnSpeed")
