@@ -58,11 +58,11 @@ void URayCastComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 }
 #endif
 
-FString URayCastComponent::PerformTrace(FVector Start, FVector Direction)
+AActor* URayCastComponent::PerformTrace(FVector Start, FVector Direction)
 {
 	if (!GetWorld())
 	{
-		return TEXT("");
+		return nullptr;
 	}
 
 	Direction.Normalize();
@@ -83,7 +83,7 @@ FString URayCastComponent::PerformTrace(FVector Start, FVector Direction)
 
 	if (bDrawDebug)
 	{
-		DrawDebugLine(GetWorld(), Start, End, DebugColor, false, 5.f, 0, 5.0f);
+		DrawDebugLine(GetWorld(), Start, End, DebugColor, false, 5.f, 0, 3.0f);
 
 		if (bHit)
 		{
@@ -93,5 +93,5 @@ FString URayCastComponent::PerformTrace(FVector Start, FVector Direction)
 		}
 	}
 
-	return bHit ? Hit.GetActor()->GetName() : TEXT("");
+	return bHit ? Hit.GetActor() : nullptr;
 }

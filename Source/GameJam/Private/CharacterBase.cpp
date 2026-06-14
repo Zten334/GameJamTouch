@@ -12,6 +12,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameJam/Public/Components/RayCastComponent.h"
 #include "GameJam/Public/DataAsset/InputDataAsset.h"
+#include "Actors/IteractableItem.h"
 
 // Sets default values
 ACharacterBase::ACharacterBase()
@@ -139,13 +140,19 @@ void ACharacterBase::DoLook(const FInputActionValue& InputActionValue)
 	AddControllerYawInput(InputValue * RotateSpeed * GetWorld()->GetDeltaSeconds() );
 }
 
+
+
 void ACharacterBase::DoRaycast()
 {
-	// 沿组件前方发射
-	RayCastComponent->PerformTrace(
+	AActor* HitActor = RayCastComponent->PerformTrace(
 		RayCastComponent->GetComponentLocation(),
 		RayCastComponent->GetForwardVector()
 	);
+
+	if (AIteractableItem* Item = Cast<AIteractableItem>(HitActor))
+	{
+		Item->HandleTouch(this);
+	}
 }
 
 void ACharacterBase::DoMouseClick()
@@ -153,15 +160,18 @@ void ACharacterBase::DoMouseClick()
 	APlayerController* PC = Cast<APlayerController>(GetController());
 	if (!PC) return;
 
-	// 获取鼠标屏幕坐标
 	float MouseX, MouseY;
 	if (!PC->GetMousePosition(MouseX, MouseY)) return;
 
-	// 屏幕坐标 → 世界方向
 	FVector WorldLocation, WorldDirection;
 	if (!PC->DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection)) return;
 
-	RayCastComponent->PerformTrace(WorldLocation, WorldDirection);
+	AActor* HitActor = RayCastComponent->PerformTrace(WorldLocation, WorldDirection);
+
+	if (AIteractableItem* Item = Cast<AIteractableItem>(HitActor))
+	{
+		Item->HandleTouch(this);
+	}
 }
 
 

@@ -6,17 +6,20 @@
 #include "GameFramework/Actor.h"
 #include "IteractableItem.generated.h"
 
+class ACharacterBase;
 class UStaticMeshComponent;
+class UProjectileMovementComponent;
+class UCameraShakeBase;
 
 UENUM(BlueprintType)
-enum class EInteracteType : uint8
+enum class ECollisionType : uint8
 {
-	BANANA,        //
-	BECYLE,          //
-	UTILITY_POLE,   //电线杆
-	PUDDLE,         //
-	RUNNING_MAN,    //MAN！
-	VEHICLE,
+	BANANA,          // 香蕉
+	BECYLE,          // 自行车
+	UTILITY_POLE,    // 电线杆
+	PUDDLE,          // 水坑
+	RUNNING_MAN,     // MAN！
+	VEHICLE,         // 载具
 };
 
 UCLASS()
@@ -27,15 +30,29 @@ class GAMEJAM_API AIteractableItem : public AActor
 public:
 	AIteractableItem();
 
-	/** 蓝图里碰撞事件触发后调这个，传入碰撞的 Actor */
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
-	void HandleInteraction(AActor* Interactor);
+	void HandleCollisionInteraction(AActor* Interactor);
+
+	void HandleTouch(ACharacterBase* Character);
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IteracteType")
-	EInteracteType InteracteType;
+	virtual void BeginPlay() override;
 
-	// ── 只负责显示 Mesh 和物理阻挡，不绑定事件 ──
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "IteracteType")
+	ECollisionType CollisionType;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
+	TSubclassOf<UCameraShakeBase> HitShakeClass;
+
+	// ── 显示 + 物理阻挡 ──
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> BlockComp;
+
+	// ── 移动组件：Item 自己控制运动 ──
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UProjectileMovementComponent> MovementComp;
+
+	/** 初始移动速度，BeginPlay 时自动按自身前方发射 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float InitialSpeed = 500.f;
 };
