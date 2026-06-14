@@ -2,7 +2,7 @@
 
 
 #include "GameJam/Public/CharacterBase.h"
-#include "GameJam/Public/BlindEchoRevealComponent.h"
+#include "GameJam/Public/Components/BlindEchoRevealComponent.h"
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -13,6 +13,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameJam/Public/Components/RayCastComponent.h"
 #include "GameJam/Public/DataAsset/InputDataAsset.h"
+#include "Components/PlayerUIComponent.h"
+#include "Blueprint/UserWidget.h"
+#include "UI/HUDWidgetBase.h"
+#include "Actors/IteractableItem.h"
 
 // Sets default values
 ACharacterBase::ACharacterBase()
@@ -63,6 +67,26 @@ void ACharacterBase::BeginPlay()
 	{
 		RayCastComponent->OnRayCastHit.AddDynamic(this, &ACharacterBase::HandleRayCastHit);
 	}
+
+	//创建 UI 组件
+	PlayerUIComponent = CreateDefaultSubobject<UPlayerUIComponent>("PlayerUIComponent");
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	// 开放鼠标光标
+	PC->SetShowMouseCursor(true);
+
+	// 创建 HUD，如果是 UHUDWidgetBase 子类则传入组件引用
+	if (IsLocallyControlled() && HUDWidgetClass)
+	{
+		UUserWidget* HUD = CreateWidget<UUserWidget>(PC, HUDWidgetClass);
+		if (UHUDWidgetBase* BaseHUD = Cast<UHUDWidgetBase>(HUD))
+		{
+			BaseHUD->Init(PlayerUIComponent);
+		}
+		HUD->AddToViewport();
+	}
 }
 
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -104,6 +128,11 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	{
 		EnhancedInput->BindAction(InputData->RaycastAction, ETriggerEvent::Started,this, &ACharacterBase::DoRaycast);
 	}	
+
+	if (InputData->MouseClickAction)
+	{
+		EnhancedInput->BindAction(InputData->MouseClickAction, ETriggerEvent::Started, this, &ACharacterBase::DoMouseClick);
+	}
 }
 
 void ACharacterBase::DoMove(const FInputActionValue& InputActionValue)
@@ -139,9 +168,38 @@ void ACharacterBase::DoLook(const FInputActionValue& InputActionValue)
 	AddControllerYawInput(InputValue * RotateSpeed * GetWorld()->GetDeltaSeconds() );
 }
 
+
+
 void ACharacterBase::DoRaycast()
 {
-	RayCastComponent->PerformTrace();
+	AActor* HitActor = RayCastComponent->PerformTrace(
+		RayCastComponent->GetComponentLocation(),
+		RayCastComponent->GetForwardVector()
+	);
+
+	if (AIteractableItem* Item = Cast<AIteractableItem>(HitActor))
+	{
+		Item->HandleTouch(this);
+	}
+}
+
+void ACharacterBase::DoMouseClick()
+{
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (!PC) return;
+
+	float MouseX, MouseY;
+	if (!PC->GetMousePosition(MouseX, MouseY)) return;
+
+	FVector WorldLocation, WorldDirection;
+	if (!PC->DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection)) return;
+
+	AActor* HitActor = RayCastComponent->PerformTrace(WorldLocation, WorldDirection);
+
+	if (AIteractableItem* Item = Cast<AIteractableItem>(HitActor))
+	{
+		Item->HandleTouch(this);
+	}
 }
 
 void ACharacterBase::HandleRayCastHit(const FHitResult& HitResult)

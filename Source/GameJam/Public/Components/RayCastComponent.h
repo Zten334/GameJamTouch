@@ -9,6 +9,8 @@
 // 命中结果广播委托
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRayCastHit, const FHitResult&, HitResult);
 
+
+//直接把检测完之后的逻辑也写在这里了
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class GAMEJAM_API URayCastComponent : public USceneComponent
 {
@@ -17,9 +19,9 @@ class GAMEJAM_API URayCastComponent : public USceneComponent
 public:
 	URayCastComponent();
 
-	// 执行射线检测，返回命中 Actor 的名字。未命中返回空字符串。
+	// 从 Start 沿 Direction 发射射线，返回命中的 Actor。未命中返回 nullptr。
 	UFUNCTION(BlueprintCallable, Category = "RayCast")
-	FString PerformTrace();
+	AActor* PerformTrace(FVector Start, FVector Direction);
 
 	// 命中时广播，外部组件（如 BlindEchoRevealComponent）订阅即可解耦
 	UPROPERTY(BlueprintAssignable, Category = "RayCast")
@@ -27,6 +29,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void OnRegister() override;
 
 #if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
@@ -37,9 +40,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RayCast")
 	float TraceLength = 500.f;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RayCast")
-	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
+	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Pawn;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "RayCast|Debug")
 	bool bDrawDebug = true;

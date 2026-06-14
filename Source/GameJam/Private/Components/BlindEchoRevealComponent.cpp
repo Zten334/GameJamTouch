@@ -1,4 +1,4 @@
-#include "BlindEchoRevealComponent.h"
+#include "../../Public/Components/BlindEchoRevealComponent.h"
 
 #include "Camera/CameraComponent.h"
 #include "Components/PrimitiveComponent.h"

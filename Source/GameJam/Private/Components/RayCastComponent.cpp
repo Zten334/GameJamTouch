@@ -8,16 +8,25 @@
 URayCastComponent::URayCastComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
+}
 
-	// 创建可视化箭头，编辑器里能看到射线方向和长度
-	ArrowComponent = CreateDefaultSubobject<UArrowComponent>(TEXT("Arrow"));
-	ArrowComponent->ArrowColor = FColor::Cyan;
-	ArrowComponent->ArrowSize = 0.5f;
-	ArrowComponent->bIsScreenSizeScaled = true;
-	ArrowComponent->bHiddenInGame = true;
-	
-	ArrowComponent->SetupAttachment(this);
-	
+void URayCastComponent::OnRegister()
+{
+	Super::OnRegister();
+
+#ifdef WITH_EDITOR
+	if (!ArrowComponent)
+	{
+		ArrowComponent = NewObject<UArrowComponent>(this, TEXT("Arrow"));
+		ArrowComponent->ArrowColor = FColor::Cyan;
+		ArrowComponent->ArrowSize = 0.5f;
+		ArrowComponent->bIsScreenSizeScaled = true;
+		ArrowComponent->bHiddenInGame = true;
+		ArrowComponent->SetupAttachment(this);
+		ArrowComponent->RegisterComponent();
+	}
+	UpdateArrow();
+#endif
 }
 
 void URayCastComponent::BeginPlay()
@@ -49,22 +58,16 @@ void URayCastComponent::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 }
 #endif
 
-FString URayCastComponent::PerformTrace()
+AActor* URayCastComponent::PerformTrace(FVector Start, FVector Direction)
 {
-	UE_LOG(LogTemp, Warning, TEXT("射线检测"));
-	
 	if (!GetWorld())
 	{
-		return TEXT("");
+		return nullptr;
 	}
 
-	const FVector Start = GetComponentLocation();
-	const FVector End = Start + GetForwardVector() * TraceLength;
-	
-	UE_LOG(LogTemp, Warning, TEXT("%s"),*Start.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("%s"),*End.ToString());
+	Direction.Normalize();
+	const FVector End = Start + Direction * TraceLength;
 
-	
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(GetOwner());
 	QueryParams.bTraceComplex = false;
@@ -80,19 +83,20 @@ FString URayCastComponent::PerformTrace()
 
 	if (bDrawDebug)
 	{
-		DrawDebugLine(GetWorld(), Start, End, DebugColor, false, 5.f, 0, 5.0f);
+		DrawDebugLine(GetWorld(), Start, End, DebugColor, false, 5.f, 0, 3.0f);
 
 		if (bHit)
 		{
-			DrawDebugPoint(GetWorld(), Hit.ImpactPoint, 10.f, FColor::Green, false, 0.1f);
+			UE_LOG(LogTemp, Warning, TEXT("%s hit!"), *Hit.GetActor()->GetName());
+
+			DrawDebugPoint(GetWorld(), Hit.ImpactPoint, 10.f, FColor::Green, false, 5.f);
 		}
 	}
-
 	// 命中时广播完整 HitResult（含命中点 Hit.ImpactPoint / Hit.Component 等）
 	if (bHit)
 	{
 		OnRayCastHit.Broadcast(Hit);
 	}
 
-	return bHit ? Hit.GetActor()->GetName() : TEXT("");
+	return bHit ? Hit.GetActor() : nullptr;
 }
