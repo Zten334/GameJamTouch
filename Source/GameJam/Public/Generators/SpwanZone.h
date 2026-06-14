@@ -16,26 +16,30 @@ class GAMEJAM_API ASpwanZone : public AActor
 public:
 	ASpwanZone();
 
+	/** 追踪所有已生成的 Actor，子类可直接用 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn")
+	TArray<TObjectPtr<AActor>> SpawnedActors;
+
 protected:
-	// ── 触发器：玩家踩入范围 ──
+	virtual void BeginPlay() override;
+
+	// ── 组件 ──
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn|Components")
 	TObjectPtr<UBoxComponent> TriggerComp;
 
-	// ── 标记点容器：在蓝图里往它下面加 Arrow/SceneComponent 即可 ──
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn|Components")
 	TObjectPtr<USceneComponent> MarkersRoot;
 
-	/** BeginPlay 时自动收集的标记点（只读） */
+	/** BeginPlay 时自动收集的标记点 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn")
 	TArray<TObjectPtr<USceneComponent>> CachedMarkers;
 
-	virtual void BeginPlay() override;
-
 	UFUNCTION()
-	void OnZoneBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	virtual void OnZoneBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	void SpawnItems();
+	/** 生成 Actor，子类可 override */
+	virtual void SpawnItems();
 
 	/** 生成什么 Actor */
 	UPROPERTY(EditDefaultsOnly, Category = "Spawn")
@@ -45,6 +49,5 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Spawn")
 	bool bSpawnOnce = true;
 
-private:
 	bool bHasSpawned = false;
 };

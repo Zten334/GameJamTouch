@@ -110,6 +110,8 @@ void AIteractableItem::HandleCollisionInteraction(AActor* Interactor)
 			PC->ClientStartCameraShake(HitShakeClass);
 		}
 	}
+
+	OnPlayerCollision.Broadcast(Interactor);
 }
 
 void AIteractableItem::HandleTouch(ACharacterBase* Character)

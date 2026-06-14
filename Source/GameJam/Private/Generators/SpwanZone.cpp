@@ -68,6 +68,6 @@ void ASpwanZone::SpawnItems()
 		AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(
 			ItemClass, SpawnLocation, SpawnRotation, Params);
 
-		// Item 的 BeginPlay 按自己 InitialSpeed + 当前朝向发射
+		SpawnedActors.Add(SpawnedActor);
 	}
 }

@@ -12,6 +12,8 @@ class UCameraShakeBase;
 class USoundBase;
 class UProjectileMovementComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPlayerCollision, AActor*, HitPlayer);
+
 UENUM(BlueprintType)
 enum class ECollisionType : uint8
 {
@@ -42,10 +44,24 @@ class GAMEJAM_API AIteractableItem : public AActor
 public:
 	AIteractableItem();
 
+	/** 碰撞到玩家时广播，蓝图和 C++ 都能绑 */
+	UPROPERTY(BlueprintAssignable, Category = "Interaction")
+	FOnPlayerCollision OnPlayerCollision;
+
 	UFUNCTION(BlueprintCallable, Category = "Interaction")
 	void HandleCollisionInteraction(AActor* Interactor);
 
 	void HandleTouch(ACharacterBase* Character);
+
+	// ── 暴露给 TrafficZone 等外部使用 ──
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UStaticMeshComponent> BlockComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	TObjectPtr<UProjectileMovementComponent> MovementComp;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float InitialSpeed = 0.f;
 
 protected:
 	virtual void BeginPlay() override;
@@ -55,7 +71,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "TouchType")
 	EPlayerTouchType TouchType;
-	
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Audio")
 	TObjectPtr<USoundBase> CollisionSound;
 
@@ -65,18 +81,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera")
 	TSubclassOf<UCameraShakeBase> HitShakeClass;
 
-	// ── 显示 + 物理阻挡 ──
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UStaticMeshComponent> BlockComp;
-
-	// ── 移动：Item 自己控制飞行 ──
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UProjectileMovementComponent> MovementComp;
-
-	/** 初始移动速度，BeginPlay 时按自身前方推一下 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
-	float InitialSpeed = 0.f;
-	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	float CollisionDemage = 0.f;
 };
