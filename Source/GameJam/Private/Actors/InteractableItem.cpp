@@ -1,6 +1,6 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Actors/IteractableItem.h"
+#include "Actors/InteractableItem.h"
 
 #include "CharacterBase.h"
 #include "Components/StaticMeshComponent.h"
@@ -12,7 +12,7 @@
 #include "GameFramework/PlayerController.h"
 #include "State/State.h"
 
-AIteractableItem::AIteractableItem()
+AInteractableItem::AInteractableItem()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
@@ -35,7 +35,7 @@ AIteractableItem::AIteractableItem()
 	CollisionType = ECollisionType::NONE;
 }
 
-void AIteractableItem::BeginPlay()
+void AInteractableItem::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -46,7 +46,7 @@ void AIteractableItem::BeginPlay()
 	}
 }
 
-void AIteractableItem::HandleCollisionInteraction(AActor* Interactor)
+void AInteractableItem::HandleCollisionInteraction(AActor* Interactor)
 {
 	if (!Interactor)
 	{
@@ -123,7 +123,7 @@ void AIteractableItem::HandleCollisionInteraction(AActor* Interactor)
 	OnPlayerCollision.Broadcast(Interactor);
 }
 
-void AIteractableItem::HandleTouch(ACharacterBase* Character)
+void AInteractableItem::HandleTouch(ACharacterBase* Character)
 {
 	if (!Character)
 	{

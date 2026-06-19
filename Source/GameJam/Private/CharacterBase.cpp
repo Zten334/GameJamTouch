@@ -15,7 +15,7 @@
 #include "Components/PlayerUIComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/HUDWidgetBase.h"
-#include "Actors/IteractableItem.h"
+#include "Actors/InteractableItem.h"
 
 // Sets default values
 ACharacterBase::ACharacterBase()
@@ -167,7 +167,7 @@ void ACharacterBase::DoRaycast()
 		RayCastComponent->GetForwardVector()
 	);
 
-	if (AIteractableItem* Item = Cast<AIteractableItem>(HitActor))
+	if (AInteractableItem* Item = Cast<AInteractableItem>(HitActor))
 	{
 		Item->HandleTouch(this);
 	}
@@ -186,7 +186,7 @@ void ACharacterBase::DoMouseClick()
 
 	AActor* HitActor = RayCastComponent->PerformTrace(WorldLocation, WorldDirection);
 
-	if (AIteractableItem* Item = Cast<AIteractableItem>(HitActor))
+	if (AInteractableItem* Item = Cast<AInteractableItem>(HitActor))
 	{
 		Item->HandleTouch(this);
 	}

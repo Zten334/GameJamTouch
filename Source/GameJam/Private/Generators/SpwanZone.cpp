@@ -3,7 +3,7 @@
 #include "Generators/SpwanZone.h"
 
 #include "CharacterBase.h"
-#include "Actors/IteractableItem.h"
+#include "Actors/InteractableItem.h"
 #include "Components/BoxComponent.h"
 #include "Engine/World.h"
 

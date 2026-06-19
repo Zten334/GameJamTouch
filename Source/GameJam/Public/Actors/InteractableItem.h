@@ -1,10 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "IteractableItem.generated.h"
+#include "InteractableItem.generated.h"
 
 class ACharacterBase;
 class UStaticMeshComponent;
@@ -37,12 +37,12 @@ enum class EPlayerTouchType : uint8
 };
 
 UCLASS()
-class GAMEJAM_API AIteractableItem : public AActor
+class GAMEJAM_API AInteractableItem : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	AIteractableItem();
+	AInteractableItem();
 
 	/** 碰撞到玩家时广播，蓝图和 C++ 都能绑 */
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")

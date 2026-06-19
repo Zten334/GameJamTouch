@@ -3,7 +3,7 @@
 #include "Generators/TrafficZone.h"
 
 #include "CharacterBase.h"
-#include "Actors/IteractableItem.h"
+#include "Actors/InteractableItem.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
@@ -207,7 +207,7 @@ void ATrafficZone::LaunchVehicles()
 		AActor* Vehicle = Pair.Key;
 		if (!Vehicle) continue;
 
-		if (AIteractableItem* Item = Cast<AIteractableItem>(Vehicle))
+		if (AInteractableItem* Item = Cast<AInteractableItem>(Vehicle))
 		{
 			if (Item->InitialSpeed > 0.f)
 			{
@@ -226,7 +226,7 @@ void ATrafficZone::RecallVehicles()
 		const FVector& Origin = Pair.Value;
 		if (!Vehicle) continue;
 
-		if (AIteractableItem* Item = Cast<AIteractableItem>(Vehicle))
+		if (AInteractableItem* Item = Cast<AInteractableItem>(Vehicle))
 		{
 			Item->MovementComp->Velocity = FVector::ZeroVector;
 			Item->MovementComp->Deactivate();
