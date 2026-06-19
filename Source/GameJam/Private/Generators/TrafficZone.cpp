@@ -54,7 +54,7 @@ void ATrafficZone::OnZoneBeginOverlap(UPrimitiveComponent*, AActor* OtherActor,
 }
 
 void ATrafficZone::OnTriggerEndOverlap(UPrimitiveComponent*, AActor* OtherActor,
-	UPrimitiveComponent*, int32)
+	UPrimitiveComponent* OtherComp, int32)
 {
 	if (Cast<ACharacterBase>(OtherActor))
 	{
