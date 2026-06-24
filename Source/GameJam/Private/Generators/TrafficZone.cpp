@@ -39,7 +39,7 @@ void ATrafficZone::BeginPlay()
 
 // ── 玩家进入：绿灯只记录，红灯直接弹走 ──
 void ATrafficZone::OnZoneBeginOverlap(UPrimitiveComponent*, AActor* OtherActor,
-	UPrimitiveComponent*, int32, bool, const FHitResult&)
+	UPrimitiveComponent*, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ACharacterBase* Player = Cast<ACharacterBase>(OtherActor);
 	if (!Player) return;
@@ -76,6 +76,7 @@ void ATrafficZone::PunishAndTeleport(ACharacterBase* Player)
 	{
 		if (APlayerController* PC = Cast<APlayerController>(Player->GetController()))
 		{
+			//这里用委托更好一点
 			PC->ClientStartCameraShake(PunishShakeClass);
 		}
 	}
@@ -85,6 +86,7 @@ void ATrafficZone::PunishAndTeleport(ACharacterBase* Player)
 		Player->PlayerUIComponent->ShowMessage(FText::FromString(TEXT("不要闯红灯！")),2.f);
 	}
 	//扣血
+	//简化形式，应该写在角色的状态组件里面的
 	AState* State = Cast<AState>(Player->GetPlayerState());
 	if (State)
 	{

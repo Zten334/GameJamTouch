@@ -38,6 +38,12 @@ void ASpwanZone::BeginPlay()
 	TArray<USceneComponent*> RawMarkers;
 	MarkersRoot->GetChildrenComponents(false, RawMarkers);
 	CachedMarkers = TArray<TObjectPtr<USceneComponent>>(RawMarkers);
+	
+	//Not Defense Temprarily
+	for (AInteractableItem * Item : CachedSpawns)
+	{
+		UE_LOG(LogTemp,Warning,TEXT("Spawned Actor: %s"), *Item->GetName());
+	}
 }
 
 void ASpwanZone::OnZoneBeginOverlap(UPrimitiveComponent*, AActor* OtherActor,

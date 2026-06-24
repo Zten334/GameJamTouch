@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "SpwanZone.generated.h"
 
+class AInteractableItem;
 class UBoxComponent;
 
 UCLASS()
@@ -14,6 +15,7 @@ class GAMEJAM_API ASpwanZone : public AActor
 	GENERATED_BODY()
 
 public:
+	
 	ASpwanZone();
 
 	/** 追踪所有已生成的 Actor，子类可直接用 */
@@ -33,6 +35,9 @@ protected:
 	/** BeginPlay 时自动收集的标记点 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spawn")
 	TArray<TObjectPtr<USceneComponent>> CachedMarkers;
+	
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Spawn")
+	TArray<TObjectPtr<AInteractableItem>> CachedSpawns;
 
 	UFUNCTION()
 	virtual void OnZoneBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

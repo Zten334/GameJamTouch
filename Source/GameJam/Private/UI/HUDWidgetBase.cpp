@@ -7,3 +7,8 @@ void UHUDWidgetBase::Init(UPlayerUIComponent* InUIComponent)
 {
 	UIComponent = InUIComponent;
 }
+
+void UHUDWidgetBase::ShowMassage(const FString& Msg, const float Duration)
+{
+	
+}
